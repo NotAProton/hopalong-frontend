@@ -1,6 +1,7 @@
 // components/AuthLayout.jsx
 import { motion } from "motion/react";
 import { Icon } from "@iconify/react";
+import { useNavigate } from "react-router-dom";
 
 interface AuthLayoutProps {
   title: string;
@@ -9,6 +10,8 @@ interface AuthLayoutProps {
 }
 
 const AuthLayout = ({ children, title, subtitle }: AuthLayoutProps) => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
@@ -24,16 +27,19 @@ const AuthLayout = ({ children, title, subtitle }: AuthLayoutProps) => {
         }}
       >
         <div className="container mx-auto px-4">
-          <motion.div
+          <motion.button
             className="flex items-center gap-2"
-            whileHover={{ scale: 1.05 }}
+            whileHover={{ scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 10 }}
+            onClick={() => {
+              void navigate("/");
+            }}
           >
             <Icon icon="mdi:car-sports" className="text-yellow-400 text-3xl" />
             <span className="font-bold text-xl bg-gradient-to-r from-yellow-400 to-amber-500 text-transparent bg-clip-text">
               HopAlong
             </span>
-          </motion.div>
+          </motion.button>
         </div>
       </motion.header>
 
@@ -108,33 +114,6 @@ const AuthLayout = ({ children, title, subtitle }: AuthLayoutProps) => {
           >
             {children}
           </motion.div>
-        </motion.div>
-      </div>
-
-      {/* Taxi animation in corner */}
-      <div className="fixed bottom-10 right-10 z-50 w-16 h-16 taxi-container">
-        <motion.div
-          className="taxi-animation"
-          animate={{
-            x: [100, -100],
-            rotate: [0, 0, 10, -10, 0],
-          }}
-          transition={{
-            x: {
-              repeat: Infinity,
-              repeatType: "mirror",
-              duration: 8,
-              ease: "easeInOut",
-            },
-            rotate: {
-              repeat: Infinity,
-              repeatType: "loop",
-              duration: 2,
-              ease: "easeInOut",
-            },
-          }}
-        >
-          <Icon icon="mdi:taxi" className="text-yellow-400 text-4xl" />
         </motion.div>
       </div>
     </div>

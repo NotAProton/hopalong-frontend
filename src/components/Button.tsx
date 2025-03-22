@@ -31,12 +31,12 @@ const Button = ({
       className={`
         py-3 px-6 rounded-full font-medium flex items-center justify-center gap-2
         ${fullWidth ? "w-full" : ""}
+        ${primary ? " text-white" : "border-2 border-yellow-400 text-gray-700"}
         ${
-          primary
-            ? "bg-gradient-to-r from-yellow-400 to-amber-500 text-white"
-            : "border-2 border-yellow-400 text-gray-700"
+          disabled
+            ? "opacity-50 cursor-not-allowed bg-slate-500"
+            : "bg-gradient-to-r from-yellow-400 to-amber-500 cursor-pointer"
         }
-        ${disabled ? "opacity-50 cursor-not-allowed" : ""}
       `}
       whileHover={!disabled ? { scale: 1.05 } : {}}
       whileTap={!disabled ? { scale: 0.95 } : {}}

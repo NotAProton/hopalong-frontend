@@ -3,14 +3,11 @@ import { useEffect, useRef } from "react";
 import { motion, useScroll, useTransform, useAnimation } from "motion/react";
 import { Icon } from "@iconify/react";
 import "./App.css";
+import GetStartedButton from "./components/GetStarted";
 
 function App() {
   const controls = useAnimation();
   const containerRef = useRef(null);
-  /*  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start end", "end start"],
-  }); */
 
   useEffect(() => {
     void controls.start({
@@ -28,7 +25,6 @@ function App() {
       <HowItWorks />
       <CallToAction />
       <Footer />
-      <TaxiAnimation />
     </div>
   );
 }
@@ -67,14 +63,7 @@ function Navbar() {
           ))}
         </div>
 
-        <motion.button
-          className="bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-4 py-2 rounded-full font-medium"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          transition={{ type: "spring", stiffness: 400, damping: 17 }}
-        >
-          Download App
-        </motion.button>
+        <GetStartedButton />
       </div>
     </motion.nav>
   );
@@ -129,25 +118,7 @@ function Hero() {
           </motion.p>
 
           <div className="flex flex-wrap gap-4">
-            <motion.button
-              className="bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-6 py-3 rounded-full font-medium flex items-center gap-2"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            >
-              <Icon icon="mdi:download" /> Download Now
-            </motion.button>
-            <motion.button
-              className="border-2 border-yellow-400 text-gray-700 px-6 py-3 rounded-full font-medium flex items-center gap-2"
-              whileHover={{
-                scale: 1.05,
-                backgroundColor: "rgba(250, 204, 21, 0.1)",
-              }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            >
-              <Icon icon="mdi:account-group" /> Join Community
-            </motion.button>
+            <GetStartedButton />
           </div>
         </motion.div>
 
@@ -509,41 +480,7 @@ function CallToAction() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <motion.button
-                className="bg-white text-amber-500 px-6 py-3 rounded-full font-medium flex items-center justify-center gap-2"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 400,
-                  damping: 17,
-                  delay: 0.6,
-                }}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-              >
-                <Icon icon="mdi:download" /> Download Now
-              </motion.button>
-              <motion.button
-                className="border-2 border-white text-white px-6 py-3 rounded-full font-medium flex items-center justify-center gap-2"
-                whileHover={{
-                  scale: 1.05,
-                  backgroundColor: "rgba(255, 255, 255, 0.1)",
-                }}
-                whileTap={{ scale: 0.95 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 400,
-                  damping: 17,
-                  delay: 0.7,
-                }}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-              >
-                <Icon icon="mdi:account-group" /> Join Community
-              </motion.button>
+              <GetStartedButton />
             </div>
           </div>
         </motion.div>
@@ -575,73 +512,7 @@ function Footer() {
             <p className="text-gray-400 mb-4">
               Your Ride, Your Way, Every Day!
             </p>
-            <div className="flex gap-4">
-              {[
-                "mdi:facebook",
-                "mdi:twitter",
-                "mdi:instagram",
-                "mdi:linkedin",
-              ].map((icon, i) => (
-                <motion.a
-                  key={i}
-                  href="#"
-                  className="text-gray-400 hover:text-yellow-400"
-                  whileHover={{ scale: 1.2, rotate: 5 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                >
-                  <Icon icon={icon} className="text-xl" />
-                </motion.a>
-              ))}
-            </div>
           </motion.div>
-
-          {[
-            {
-              title: "Company",
-              links: ["About Us", "Careers", "Blog", "Press"],
-            },
-            {
-              title: "Resources",
-              links: ["Help Center", "Safety", "Universities", "Developers"],
-            },
-            {
-              title: "Legal",
-              links: [
-                "Terms of Service",
-                "Privacy Policy",
-                "Cookie Policy",
-                "GDPR",
-              ],
-            },
-          ].map((col, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 * (i + 1) }}
-            >
-              <h3 className="font-semibold text-lg mb-4">{col.title}</h3>
-              <ul className="space-y-2">
-                {col.links.map((link, j) => (
-                  <motion.li key={j}>
-                    <motion.a
-                      href="#"
-                      className="text-gray-400 hover:text-yellow-400 transition-colors"
-                      whileHover={{ x: 5 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 10,
-                      }}
-                    >
-                      {link}
-                    </motion.a>
-                  </motion.li>
-                ))}
-              </ul>
-            </motion.div>
-          ))}
         </div>
 
         <motion.div
@@ -670,35 +541,4 @@ function Footer() {
     </footer>
   );
 }
-
-function TaxiAnimation() {
-  return (
-    <div className="fixed bottom-10 right-10 z-50 w-16 h-16 taxi-container">
-      <motion.div
-        className="taxi-animation"
-        animate={{
-          x: [100, -100],
-          rotate: [0, 0, 10, -10, 0],
-        }}
-        transition={{
-          x: {
-            repeat: Infinity,
-            repeatType: "mirror",
-            duration: 8,
-            ease: "easeInOut",
-          },
-          rotate: {
-            repeat: Infinity,
-            repeatType: "loop",
-            duration: 2,
-            ease: "easeInOut",
-          },
-        }}
-      >
-        <Icon icon="mdi:taxi" className="text-yellow-400 text-4xl" />
-      </motion.div>
-    </div>
-  );
-}
-
 export default App;
