@@ -14,18 +14,22 @@ const Login = () => {
     remember: false,
   });
 
-  const [errors, setErrors] = useState({});
+  interface Errors {
+    email?: string;
+    password?: string;
+  }
+
+  const [errors, setErrors] = useState({} as Errors);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
       [name]: type === "checkbox" ? checked : value,
     });
 
-    // Clear errors when typing
-    if (errors[name]) {
+    if (errors[name as keyof Errors]) {
       setErrors({
         ...errors,
         [name]: "",
@@ -34,7 +38,7 @@ const Login = () => {
   };
 
   const validate = () => {
-    const newErrors = {};
+    const newErrors = {} as Errors;
 
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
@@ -50,9 +54,7 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
+  const handleSubmit = () => {
     if (validate()) {
       setIsLoading(true);
 
@@ -73,10 +75,10 @@ const Login = () => {
       title="Welcome Back"
       subtitle="Sign in to your HopAlong account"
     >
-      <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+      <form className="mt-8 space-y-6">
         <div className="space-y-4">
           <TextField
-            label="Email Address"
+            label="Institute Email ID"
             type="email"
             name="email"
             value={formData.email}
@@ -116,11 +118,11 @@ const Login = () => {
 
           <div className="pt-4">
             <Button
-              type="submit"
               fullWidth
               icon="mdi:login"
               disabled={isLoading}
               delay={0.4}
+              onClick={handleSubmit}
             >
               {isLoading ? "Signing in..." : "Sign in"}
             </Button>

@@ -5,11 +5,13 @@ import { Icon } from "@iconify/react";
 interface TextFieldProps {
   label: string;
   type?: string;
+  name: string;
   placeholder: string;
   icon?: string;
   value: string;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  error: string;
+  error?: string;
   required?: boolean;
   delay?: number;
 }
@@ -17,9 +19,11 @@ interface TextFieldProps {
 const TextField = ({
   label,
   type = "text",
+  name,
   placeholder,
   icon,
   value,
+  onBlur,
   onChange,
   error,
   required = false,
@@ -51,9 +55,11 @@ const TextField = ({
           } pr-4 border rounded-lg focus:ring-yellow-400 focus:border-yellow-400 transition-all duration-200 ${
             error ? "border-red-500" : "border-gray-300"
           }`}
+          onBlur={onBlur}
           whileFocus={{ scale: 1.02 }}
           transition={{ type: "spring", stiffness: 300, damping: 10 }}
           required={required}
+          name={name}
         />
       </div>
       {error && <p className="text-red-500 text-xs mt-1 shake">{error}</p>}

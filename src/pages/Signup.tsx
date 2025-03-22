@@ -1,14 +1,46 @@
-// components/Button.jsx
-
-// pages/SignUp.jsx
-import { useState } from "react";
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Icon } from "@iconify/react";
+import { useMutation } from "@tanstack/react-query";
 import AuthLayout from "../components/AuthLayout";
 import TextField from "../components/TextField";
 import Button from "../components/Button";
 import Divider from "../components/Divider";
+import OTPInput from "../components/OTPInput";
 import { Link } from "react-router-dom";
+import {
+  validateEmail,
+  validateName,
+  validatePassword,
+  validatePhone,
+} from "../utils/validator";
+
+// Mock API functions - replace with actual API calls
+const sendVerificationEmail = async (email: string) => {
+  // This would be an API call to send the verification code
+  console.log(`Sending verification code to: ${email}`);
+  return new Promise<{ success: boolean }>((resolve) => {
+    setTimeout(() => {
+      resolve({ success: true });
+    }, 1000);
+  });
+};
+
+const verifyOTP = async ({ email, otp }: { email: string; otp: string }) => {
+  // This would be an API call to verify the OTP
+  console.log(`Verifying OTP: ${otp} for email: ${email}`);
+  return new Promise<{ success: boolean }>((resolve, reject) => {
+    setTimeout(() => {
+      // For demo, let's consider only "123456" as valid OTP
+      if (otp === "123456") {
+        resolve({ success: true });
+      } else {
+        reject(new Error("Invalid verification code"));
+      }
+    }, 1500);
+  });
+};
 
 const SignUp = () => {
   const [step, setStep] = useState(1);
@@ -22,96 +54,159 @@ const SignUp = () => {
     phoneNumber: "",
   });
 
-  const [errors, setErrors] = useState({});
+  interface Errors {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+    studentId?: string;
+    phoneNumber?: string;
+    otp?: string;
+  }
 
-  const handleChange = (e) => {
+  const [errors, setErrors] = useState<Errors>({});
+  const [isStep1Valid, setIsStep1Valid] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const [otpError, setOtpError] = useState<string>("");
+
+  // TanStack Query mutations
+  const sendEmailMutation = useMutation({
+    mutationFn: sendVerificationEmail,
+    onSuccess: () => {
+      setStep(2);
+    },
+    onError: () => {
+      setErrors((prev) => ({
+        ...prev,
+        email: "Failed to send verification code. Please try again.",
+      }));
+    },
+  });
+
+  const verifyOtpMutation = useMutation({
+    mutationFn: verifyOTP,
+    onSuccess: () => {
+      setStep(3);
+    },
+    onError: (error) => {
+      setOtpError(error.message || "Invalid verification code");
+    },
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    setFormData((prev) => ({ ...prev, [name]: value }));
 
-    // Clear errors when typing
-    if (errors[name]) {
-      setErrors({
-        ...errors,
-        [name]: "",
-      });
-    }
+    // Validate the field after change
+    validateField(name, value);
   };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    validateField(name, value);
+  };
+
+  const validateField = (name: string, value: string) => {
+    let error = "";
+    switch (name) {
+      case "firstName":
+      case "lastName":
+        error = validateName(value).success ? "" : validateName(value).payload;
+        break;
+      case "email":
+        error = validateEmail(value).success
+          ? ""
+          : validateEmail(value).payload;
+        break;
+      case "password":
+        error = validatePassword(value).success
+          ? ""
+          : validatePassword(value).payload;
+        // Also validate confirmPassword if it's already filled
+        if (formData.confirmPassword) {
+          validateField("confirmPassword", formData.confirmPassword);
+        }
+        break;
+      case "confirmPassword":
+        error = value === formData.password ? "" : "Passwords do not match";
+        break;
+      case "phoneNumber":
+        error = validatePhone(value).success
+          ? ""
+          : validatePhone(value).payload;
+        break;
+      default:
+        break;
+    }
+    setErrors((prev) => ({ ...prev, [name]: error }));
+  };
+
+  // Check step 1 validity whenever form data or errors change
+  useEffect(() => {
+    const step1Fields = [
+      "firstName",
+      "lastName",
+      "email",
+      "password",
+      "confirmPassword",
+    ];
+    const step1Filled = step1Fields.every(
+      (field) => formData[field as keyof typeof formData].trim() !== ""
+    );
+    const step1NoErrors = step1Fields.every(
+      (field) => !errors[field as keyof typeof errors]
+    );
+
+    setIsStep1Valid(step1Filled && step1NoErrors);
+  }, [formData, errors]);
 
   const validateStep1 = () => {
-    const newErrors = {};
+    const fieldsToValidate = [
+      "firstName",
+      "lastName",
+      "email",
+      "password",
+      "confirmPassword",
+    ];
 
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = "First name is required";
-    }
+    let hasErrors = false;
 
-    if (!formData.lastName.trim()) {
-      newErrors.lastName = "Last name is required";
-    }
+    fieldsToValidate.forEach((field) => {
+      const value = formData[field as keyof typeof formData];
+      validateField(field, value);
+      if (errors[field as keyof typeof errors] || value.trim() === "") {
+        hasErrors = true;
+      }
+    });
 
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = "Please enter a valid email";
-    } else if (!formData.email.endsWith("iiitk.ac.in")) {
-      newErrors.email = "Please use your IIIT Kottayam email";
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const validateStep2 = () => {
-    const newErrors = {};
-
-    if (!formData.studentId.trim()) {
-      newErrors.studentId = "Student ID is required";
-    }
-
-    if (!formData.phoneNumber.trim()) {
-      newErrors.phoneNumber = "Phone number is required";
-    } else if (!/^\d{10}$/.test(formData.phoneNumber)) {
-      newErrors.phoneNumber = "Please enter a valid 10-digit phone number";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return !hasErrors && isStep1Valid;
   };
 
   const handleNext = () => {
     if (validateStep1()) {
-      setStep(2);
+      // Send verification email and move to OTP step
+      sendEmailMutation.mutate(formData.email);
     }
   };
 
   const handleBack = () => {
     setStep(1);
+    setOtpError("");
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (step === 1) {
-      handleNext();
-    } else if (validateStep2()) {
-      // Submit form
-      console.log("Form submitted:", formData);
-      // Here you would typically call your API to register the user
+  const handleOTPComplete = (otp: string) => {
+    verifyOtpMutation.mutate({ email: formData.email, otp });
+  };
 
-      // Show success animation
-      setStep(3);
-    }
+  const handleTermsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTermsAccepted(e.target.checked);
+  };
+
+  // Resend OTP handler
+  const handleResendOTP = () => {
+    sendEmailMutation.mutate(formData.email);
+    setOtpError("");
   };
 
   return (
@@ -119,7 +214,7 @@ const SignUp = () => {
       title="Create Account"
       subtitle="Join the IIIT Kottayam ride-sharing community"
     >
-      <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+      <form className="mt-8 space-y-6">
         <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div
@@ -136,6 +231,7 @@ const SignUp = () => {
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   placeholder="John"
                   icon="mdi:account"
                   error={errors.firstName}
@@ -148,6 +244,7 @@ const SignUp = () => {
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   placeholder="Doe"
                   icon="mdi:account"
                   error={errors.lastName}
@@ -162,7 +259,8 @@ const SignUp = () => {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="john.doe@iiitk.ac.in"
+                onBlur={handleBlur}
+                placeholder="john.doe@iiitkottayam.ac.in"
                 icon="mdi:email"
                 error={errors.email}
                 required
@@ -175,6 +273,7 @@ const SignUp = () => {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 placeholder="••••••••"
                 icon="mdi:lock"
                 error={errors.password}
@@ -188,6 +287,7 @@ const SignUp = () => {
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 placeholder="••••••••"
                 icon="mdi:lock-check"
                 error={errors.confirmPassword}
@@ -202,28 +302,18 @@ const SignUp = () => {
                   fullWidth
                   icon="mdi:arrow-right"
                   delay={0.6}
+                  disabled={!isStep1Valid || sendEmailMutation.isPending}
+                  className={
+                    !isStep1Valid || sendEmailMutation.isPending
+                      ? "bg-gray-400 hover:bg-gray-400 cursor-not-allowed"
+                      : ""
+                  }
                 >
-                  Continue
+                  {sendEmailMutation.isPending ? "Sending..." : "Continue"}
                 </Button>
               </div>
 
-              <Divider text="Or sign up with" delay={0.7} />
-
-              <div className="grid grid-cols-2 gap-4">
-                <SocialButton
-                  icon="mdi:google"
-                  label="Google"
-                  onClick={() => console.log("Google signup")}
-                  delay={0.8}
-                />
-
-                <SocialButton
-                  icon="mdi:microsoft"
-                  label="Microsoft"
-                  onClick={() => console.log("Microsoft signup")}
-                  delay={0.9}
-                />
-              </div>
+              <Divider delay={0.7} />
 
               <motion.div
                 className="text-center mt-6"
@@ -251,38 +341,61 @@ const SignUp = () => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
-              className="space-y-4"
+              className="space-y-8"
             >
-              <TextField
-                label="Student ID"
-                name="studentId"
-                value={formData.studentId}
-                onChange={handleChange}
-                placeholder="IIITK2022XXX"
-                icon="mdi:card-account-details"
-                error={errors.studentId}
-                required
-                delay={0.1}
-              />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="text-center space-y-2"
+              >
+                <h3 className="text-xl font-semibold text-gray-800">
+                  Verify Your Email
+                </h3>
+                <p className="text-gray-600">
+                  We've sent a verification code to{" "}
+                  <span className="font-medium text-yellow-600">
+                    {formData.email}
+                  </span>
+                </p>
+              </motion.div>
 
-              <TextField
-                label="Phone Number"
-                name="phoneNumber"
-                value={formData.phoneNumber}
-                onChange={handleChange}
-                placeholder="10-digit number"
-                icon="mdi:phone"
-                error={errors.phoneNumber}
-                required
-                delay={0.2}
+              <OTPInput
+                length={6}
+                onComplete={handleOTPComplete}
+                isDisabled={verifyOtpMutation.isPending}
+                error={otpError}
               />
 
               <motion.div
-                className="pt-4 space-y-3"
+                className="pt-4 space-y-4"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
               >
+                {!verifyOtpMutation.isPending && (
+                  <motion.div
+                    className="text-center"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    <p className="text-sm text-gray-600">
+                      Didn't receive code?{" "}
+                      <button
+                        type="button"
+                        onClick={handleResendOTP}
+                        className="font-medium text-yellow-500 hover:text-amber-500 transition-colors"
+                        disabled={sendEmailMutation.isPending}
+                      >
+                        {sendEmailMutation.isPending
+                          ? "Sending..."
+                          : "Resend code"}
+                      </button>
+                    </p>
+                  </motion.div>
+                )}
+
                 <motion.div
                   className="flex items-center"
                   initial={{ opacity: 0 }}
@@ -293,6 +406,8 @@ const SignUp = () => {
                     id="terms"
                     name="terms"
                     type="checkbox"
+                    checked={termsAccepted}
+                    onChange={handleTermsChange}
                     className="h-4 w-4 text-yellow-400 focus:ring-yellow-400 border-gray-300 rounded"
                   />
                   <label
@@ -323,12 +438,25 @@ const SignUp = () => {
                     primary={false}
                     icon="mdi:arrow-left"
                     delay={0.5}
+                    disabled={verifyOtpMutation.isPending}
                   >
                     Back
                   </Button>
 
-                  <Button type="submit" icon="mdi:account-plus" delay={0.6}>
-                    Sign Up
+                  <Button
+                    type="button"
+                    icon={
+                      verifyOtpMutation.isPending ? "mdi:loading" : "mdi:check"
+                    }
+                    delay={0.6}
+                    disabled={verifyOtpMutation.isPending || !termsAccepted}
+                    className={
+                      verifyOtpMutation.isPending || !termsAccepted
+                        ? "bg-gray-400 hover:bg-gray-400 cursor-not-allowed"
+                        : ""
+                    }
+                  >
+                    {verifyOtpMutation.isPending ? "Verifying..." : "Verify"}
                   </Button>
                 </div>
               </motion.div>
@@ -369,8 +497,7 @@ const SignUp = () => {
                   Account Created!
                 </h3>
                 <p className="text-gray-600">
-                  Please check your email to verify your account and complete
-                  registration.
+                  Your email has been verified and your account is ready to use.
                 </p>
               </div>
 

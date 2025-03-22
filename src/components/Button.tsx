@@ -5,8 +5,9 @@ interface ButtonProps {
   children: React.ReactNode;
   primary?: boolean;
   icon?: string;
-  onClick: () => void;
+  onClick?: () => void;
   fullWidth?: boolean;
+  className?: string;
   type?: "button" | "submit" | "reset";
   disabled?: boolean;
   delay?: number;
