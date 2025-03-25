@@ -6,6 +6,13 @@ import TextField from "../components/TextField";
 import Button from "../components/Button";
 import Divider from "../components/Divider";
 import { Link } from "react-router-dom";
+import { useLogin } from "../hooks/useAuth";
+
+interface Errors {
+  email?: string;
+  password?: string;
+  general?: string;
+}
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -14,13 +21,10 @@ const Login = () => {
     remember: false,
   });
 
-  interface Errors {
-    email?: string;
-    password?: string;
-  }
+  const [errors, setErrors] = useState<Errors>({});
 
-  const [errors, setErrors] = useState({} as Errors);
-  const [isLoading, setIsLoading] = useState(false);
+  // Use our fixed auth hook
+  const { login, loading, error } = useLogin();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -54,19 +58,22 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validate()) {
-      setIsLoading(true);
-
-      // Simulate API call
-      setTimeout(() => {
-        console.log("Form submitted:", formData);
-        // Here you would typically call your API to login the user
-        setIsLoading(false);
-
-        // Redirect to dashboard or home page
-        // window.location.href = '/dashboard';
-      }, 1500);
+      try {
+        const result = await login(formData);
+        console.log("Login successful:", result.payload.token);
+        // Handle successful login (e.g., store token, redirect, etc.)
+      } catch (err) {
+        setErrors((prev) => ({
+          ...prev,
+          general:
+            error instanceof Error
+              ? error.message
+              : "An error occurred during login",
+        }));
+        console.error("Login failed:", err);
+      }
     }
   };
 
@@ -75,8 +82,24 @@ const Login = () => {
       title="Welcome Back"
       subtitle="Sign in to your HopAlong account"
     >
-      <form className="mt-8 space-y-6">
+      <form
+        className="mt-8 space-y-6"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void handleSubmit();
+        }}
+      >
         <div className="space-y-4">
+          {errors.general && (
+            <motion.div
+              className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              {errors.general}
+            </motion.div>
+          )}
+
           <TextField
             label="Institute Email ID"
             type="email"
@@ -120,11 +143,11 @@ const Login = () => {
             <Button
               fullWidth
               icon="mdi:login"
-              disabled={isLoading}
+              disabled={loading}
               delay={0.4}
-              onClick={handleSubmit}
+              onClick={void handleSubmit}
             >
-              {isLoading ? "Signing in..." : "Sign in"}
+              {loading ? "Signing in..." : "Sign in"}
             </Button>
           </div>
 

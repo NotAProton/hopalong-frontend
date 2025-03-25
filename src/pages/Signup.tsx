@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Icon } from "@iconify/react";
-import { useMutation } from "@tanstack/react-query";
 import AuthLayout from "../components/AuthLayout";
 import TextField from "../components/TextField";
 import Button from "../components/Button";
@@ -15,32 +14,7 @@ import {
   validatePassword,
   validatePhone,
 } from "../utils/validator";
-
-// Mock API functions - replace with actual API calls
-const sendVerificationEmail = async (email: string) => {
-  // This would be an API call to send the verification code
-  console.log(`Sending verification code to: ${email}`);
-  return new Promise<{ success: boolean }>((resolve) => {
-    setTimeout(() => {
-      resolve({ success: true });
-    }, 1000);
-  });
-};
-
-const verifyOTP = async ({ email, otp }: { email: string; otp: string }) => {
-  // This would be an API call to verify the OTP
-  console.log(`Verifying OTP: ${otp} for email: ${email}`);
-  return new Promise<{ success: boolean }>((resolve, reject) => {
-    setTimeout(() => {
-      // For demo, let's consider only "123456" as valid OTP
-      if (otp === "123456") {
-        resolve({ success: true });
-      } else {
-        reject(new Error("Invalid verification code"));
-      }
-    }, 1500);
-  });
-};
+import { useSignup, useVerify } from "../hooks/useAuth";
 
 const SignUp = () => {
   const [step, setStep] = useState(1);
@@ -70,29 +44,8 @@ const SignUp = () => {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [otpError, setOtpError] = useState<string>("");
 
-  // TanStack Query mutations
-  const sendEmailMutation = useMutation({
-    mutationFn: sendVerificationEmail,
-    onSuccess: () => {
-      setStep(2);
-    },
-    onError: () => {
-      setErrors((prev) => ({
-        ...prev,
-        email: "Failed to send verification code. Please try again.",
-      }));
-    },
-  });
-
-  const verifyOtpMutation = useMutation({
-    mutationFn: verifyOTP,
-    onSuccess: () => {
-      setStep(3);
-    },
-    onError: (error) => {
-      setOtpError(error.message || "Invalid verification code");
-    },
-  });
+  const { signup, loading: signupLoading, error: signupError } = useSignup();
+  const { verify, loading: verifyLoading, error: verifyError } = useVerify();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -183,10 +136,25 @@ const SignUp = () => {
     return !hasErrors && isStep1Valid;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (validateStep1()) {
-      // Send verification email and move to OTP step
-      sendEmailMutation.mutate(formData.email);
+      try {
+        await signup({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          password: formData.password,
+        });
+        setStep(2);
+      } catch {
+        setErrors((prev) => ({
+          ...prev,
+          email:
+            signupError instanceof Error
+              ? signupError.message
+              : "Failed to send verification code. Please try again.",
+        }));
+      }
     }
   };
 
@@ -195,18 +163,41 @@ const SignUp = () => {
     setOtpError("");
   };
 
-  const handleOTPComplete = (otp: string) => {
-    verifyOtpMutation.mutate({ email: formData.email, otp });
+  const handleOTPComplete = async (otp: string) => {
+    try {
+      await verify({ email: formData.email, code: otp });
+      setStep(3);
+    } catch {
+      setOtpError(
+        verifyError instanceof Error
+          ? verifyError.message
+          : "Invalid verification code"
+      );
+    }
   };
 
   const handleTermsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setTermsAccepted(e.target.checked);
   };
 
-  // Resend OTP handler
-  const handleResendOTP = () => {
-    sendEmailMutation.mutate(formData.email);
-    setOtpError("");
+  const handleResendOTP = async () => {
+    try {
+      await signup({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+      });
+      setOtpError("");
+    } catch {
+      setErrors((prev) => ({
+        ...prev,
+        email:
+          signupError instanceof Error
+            ? signupError.message
+            : "Failed to resend verification code. Please try again.",
+      }));
+    }
   };
 
   return (
@@ -298,18 +289,20 @@ const SignUp = () => {
               <div className="pt-4">
                 <Button
                   type="button"
-                  onClick={handleNext}
+                  onClick={() => {
+                    void handleNext();
+                  }}
                   fullWidth
                   icon="mdi:arrow-right"
                   delay={0.6}
-                  disabled={!isStep1Valid || sendEmailMutation.isPending}
+                  disabled={!isStep1Valid || signupLoading}
                   className={
-                    !isStep1Valid || sendEmailMutation.isPending
+                    !isStep1Valid || signupLoading
                       ? "bg-gray-400 hover:bg-gray-400 cursor-not-allowed"
                       : ""
                   }
                 >
-                  {sendEmailMutation.isPending ? "Sending..." : "Continue"}
+                  {signupLoading ? "Sending..." : "Continue"}
                 </Button>
               </div>
 
@@ -362,8 +355,8 @@ const SignUp = () => {
 
               <OTPInput
                 length={6}
-                onComplete={handleOTPComplete}
-                isDisabled={verifyOtpMutation.isPending}
+                onComplete={() => handleOTPComplete}
+                isDisabled={verifyLoading}
                 error={otpError}
               />
 
@@ -373,7 +366,7 @@ const SignUp = () => {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
               >
-                {!verifyOtpMutation.isPending && (
+                {!verifyLoading && (
                   <motion.div
                     className="text-center"
                     initial={{ opacity: 0 }}
@@ -384,13 +377,11 @@ const SignUp = () => {
                       Didn't receive code?{" "}
                       <button
                         type="button"
-                        onClick={handleResendOTP}
+                        onClick={void handleResendOTP}
                         className="font-medium text-yellow-500 hover:text-amber-500 transition-colors"
-                        disabled={sendEmailMutation.isPending}
+                        disabled={signupLoading}
                       >
-                        {sendEmailMutation.isPending
-                          ? "Sending..."
-                          : "Resend code"}
+                        {signupLoading ? "Sending..." : "Resend code"}
                       </button>
                     </p>
                   </motion.div>
@@ -438,25 +429,23 @@ const SignUp = () => {
                     primary={false}
                     icon="mdi:arrow-left"
                     delay={0.5}
-                    disabled={verifyOtpMutation.isPending}
+                    disabled={verifyLoading}
                   >
                     Back
                   </Button>
 
                   <Button
                     type="button"
-                    icon={
-                      verifyOtpMutation.isPending ? "mdi:loading" : "mdi:check"
-                    }
+                    icon={verifyLoading ? "mdi:loading" : "mdi:check"}
                     delay={0.6}
-                    disabled={verifyOtpMutation.isPending || !termsAccepted}
+                    disabled={verifyLoading || !termsAccepted}
                     className={
-                      verifyOtpMutation.isPending || !termsAccepted
+                      verifyLoading || !termsAccepted
                         ? "bg-gray-400 hover:bg-gray-400 cursor-not-allowed"
                         : ""
                     }
                   >
-                    {verifyOtpMutation.isPending ? "Verifying..." : "Verify"}
+                    {verifyLoading ? "Verifying..." : "Verify"}
                   </Button>
                 </div>
               </motion.div>
