@@ -145,7 +145,9 @@ const Login = () => {
               icon="mdi:login"
               disabled={loading}
               delay={0.4}
-              onClick={void handleSubmit}
+              onClick={() => {
+                void handleSubmit();
+              }}
             >
               {loading ? "Signing in..." : "Sign in"}
             </Button>

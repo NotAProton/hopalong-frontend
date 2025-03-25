@@ -43,6 +43,7 @@ const SignUp = () => {
   const [isStep1Valid, setIsStep1Valid] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [otpError, setOtpError] = useState<string>("");
+  const [otp, setOtp] = useState<string>("");
 
   const { signup, loading: signupLoading, error: signupError } = useSignup();
   const { verify, loading: verifyLoading, error: verifyError } = useVerify();
@@ -163,8 +164,9 @@ const SignUp = () => {
     setOtpError("");
   };
 
-  const handleOTPComplete = async (otp: string) => {
+  const handleOTPComplete = async () => {
     try {
+      console.log("whoa");
       await verify({ email: formData.email, code: otp });
       setStep(3);
     } catch {
@@ -355,7 +357,9 @@ const SignUp = () => {
 
               <OTPInput
                 length={6}
-                onComplete={() => handleOTPComplete}
+                onComplete={(value) => {
+                  setOtp(value);
+                }}
                 isDisabled={verifyLoading}
                 error={otpError}
               />
@@ -439,6 +443,8 @@ const SignUp = () => {
                     icon={verifyLoading ? "mdi:loading" : "mdi:check"}
                     delay={0.6}
                     disabled={verifyLoading || !termsAccepted}
+                    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+                    onClick={() => handleOTPComplete()}
                     className={
                       verifyLoading || !termsAccepted
                         ? "bg-gray-400 hover:bg-gray-400 cursor-not-allowed"
