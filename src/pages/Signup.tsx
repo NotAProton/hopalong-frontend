@@ -296,7 +296,6 @@ const SignUp = () => {
                   }}
                   fullWidth
                   icon="mdi:arrow-right"
-                  delay={0.6}
                   disabled={!isStep1Valid || signupLoading}
                   className={
                     !isStep1Valid || signupLoading

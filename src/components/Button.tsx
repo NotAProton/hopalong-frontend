@@ -1,51 +1,30 @@
 import { motion } from "motion/react";
 import { Icon } from "@iconify/react";
 
-interface ButtonProps {
-  children: React.ReactNode;
-  primary?: boolean;
+const Button = ({
+  children,
+  icon,
+  onClick,
+  fullWidth,
+  disabled = false,
+}: {
+  children?: string;
   icon?: string;
   onClick?: () => void;
   fullWidth?: boolean;
-  className?: string;
-  type?: "button" | "submit" | "reset";
   disabled?: boolean;
-  delay?: number;
-}
-
-const Button = ({
-  children,
-  primary = true,
-  icon,
-  onClick,
-  fullWidth = false,
-  type = "button",
-  disabled = false,
-  delay = 0,
-}: ButtonProps) => {
+}) => {
   return (
     <motion.button
-      type={type}
+      className={`${
+        fullWidth ? "w-full" : ""
+      } bg-yellow-400 text-white px-6 py-3 rounded-lg flex items-center justify-center gap-2 font-medium shadow-md hover:shadow-lg`}
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
       onClick={onClick}
       disabled={disabled}
-      className={`
-        py-3 px-6 rounded-full font-medium flex items-center justify-center gap-2
-        ${fullWidth ? "w-full" : ""}
-        ${primary ? " text-white" : "border-2 border-yellow-400 text-gray-700"}
-        ${
-          disabled
-            ? "opacity-50 cursor-not-allowed bg-slate-500"
-            : "bg-gradient-to-r from-yellow-400 to-amber-500 cursor-pointer"
-        }
-      `}
-      whileHover={!disabled ? { scale: 1.05 } : {}}
-      whileTap={!disabled ? { scale: 0.95 } : {}}
-      transition={{ type: "spring", stiffness: 400, damping: 17, delay }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 20 }}
     >
-      {icon && <Icon icon={icon} />}
+      {icon && <Icon icon={icon} className="text-lg" />}
       {children}
     </motion.button>
   );

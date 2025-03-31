@@ -6,11 +6,11 @@ interface TextFieldProps {
   label: string;
   type?: string;
   name: string;
-  placeholder: string;
+  placeholder?: string;
   icon?: string;
-  value: string;
+  value?: string;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   error?: string;
   required?: boolean;
   delay?: number;
@@ -40,11 +40,6 @@ const TextField = ({
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <div className="relative">
-        {icon && (
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Icon icon={icon} className="text-gray-400" />
-          </div>
-        )}
         <motion.input
           type={type}
           placeholder={placeholder}
@@ -61,6 +56,12 @@ const TextField = ({
           required={required}
           name={name}
         />
+        {icon && (
+          <Icon
+            icon={icon}
+            className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-400"
+          />
+        )}
       </div>
       {error && <p className="text-red-500 text-xs mt-1 shake">{error}</p>}
     </motion.div>
