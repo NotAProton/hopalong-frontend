@@ -144,7 +144,6 @@ const Login = () => {
               fullWidth
               icon="mdi:login"
               disabled={loading}
-              delay={0.4}
               onClick={() => {
                 void handleSubmit();
               }}

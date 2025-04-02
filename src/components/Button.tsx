@@ -10,6 +10,7 @@ const Button = ({
 }: {
   children?: string;
   icon?: string;
+  delay?: number;
   onClick?: () => void;
   fullWidth?: boolean;
   disabled?: boolean;
@@ -23,6 +24,7 @@ const Button = ({
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
       disabled={disabled}
+      // delay logic can be handled externally if needed
     >
       {icon && <Icon icon={icon} className="text-lg" />}
       {children}
