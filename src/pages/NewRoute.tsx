@@ -135,10 +135,8 @@ const NewRoute = () => {
                   className="pt-4"
                 >
                   <Button
-                    primary={true}
                     fullWidth={true}
                     icon="mdi:car-arrow-right"
-                    type="submit"
                     disabled={!isFormValid}
                   >
                     Find Routes
