@@ -290,7 +290,6 @@ const SignUp = () => {
 
               <div className="pt-4">
                 <Button
-                  type="button"
                   onClick={() => {
                     void handleNext();
                   }}
@@ -427,9 +426,7 @@ const SignUp = () => {
 
                 <div className="grid grid-cols-2 gap-4 pt-4">
                   <Button
-                    type="button"
                     onClick={handleBack}
-                    primary={false}
                     icon="mdi:arrow-left"
                     delay={0.5}
                     disabled={verifyLoading}
@@ -438,7 +435,6 @@ const SignUp = () => {
                   </Button>
 
                   <Button
-                    type="button"
                     icon={verifyLoading ? "mdi:loading" : "mdi:check"}
                     delay={0.6}
                     disabled={verifyLoading || !termsAccepted}
@@ -497,7 +493,6 @@ const SignUp = () => {
 
               <div className="pt-4">
                 <Button
-                  type="button"
                   onClick={() => (window.location.href = "/login")}
                   fullWidth
                   icon="mdi:login"
