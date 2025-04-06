@@ -11,7 +11,7 @@ const GetStartedButton = () => {
       whileTap={{ scale: 0.95 }}
       transition={{ type: "spring", stiffness: 400, damping: 17 }}
       onClick={() => {
-        void navigate("/signup");
+        void navigate("/dashboard");
       }}
     >
       Get Started

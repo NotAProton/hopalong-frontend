@@ -5,8 +5,9 @@ import AuthLayout from "../components/AuthLayout";
 import TextField from "../components/TextField";
 import Button from "../components/Button";
 import Divider from "../components/Divider";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useLogin } from "../hooks/useAuth";
+import { useAuthStore } from "../store/authStore";
 
 interface Errors {
   email?: string;
@@ -22,6 +23,8 @@ const Login = () => {
   });
 
   const [errors, setErrors] = useState<Errors>({});
+  const navigate = useNavigate();
+  const { login: storeLogin } = useAuthStore();
 
   // Use our fixed auth hook
   const { login, loading, error } = useLogin();
@@ -63,7 +66,18 @@ const Login = () => {
       try {
         const result = await login(formData);
         console.log("Login successful:", result.payload.token);
-        // Handle successful login (e.g., store token, redirect, etc.)
+
+        if (!result.payload.token) {
+          throw new Error("Login failed");
+        }
+
+        storeLogin(result.payload.token, {
+          email: formData.email,
+          // Add other user fields if available in the result
+        });
+
+        // Navigate to dashboard
+        void navigate("/dashboard");
       } catch (err) {
         setErrors((prev) => ({
           ...prev,

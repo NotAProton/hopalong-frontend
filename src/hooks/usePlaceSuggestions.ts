@@ -1,13 +1,18 @@
 import { useState, useEffect } from "react";
 import { API_DOMAIN } from "../env";
 
-interface PlacesResponse {
-  status: string;
-  payload: string[];
+export interface SuggestedPlace {
+  rank: number;
+  name: string;
+  city: string;
+  street: string;
+  formatted: string;
+  lat: number;
+  lon: number;
 }
 
 export function usePlaceSuggestions(query: string) {
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState<SuggestedPlace[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
@@ -25,12 +30,12 @@ export function usePlaceSuggestions(query: string) {
       setError(null);
 
       try {
-        const response = await fetch(`${API_DOMAIN}/api/place`, {
+        const response = await fetch(`${API_DOMAIN}/api/autocomplete`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ query }),
+          body: JSON.stringify({ address: query }),
           signal: controller.signal,
         });
 
@@ -38,8 +43,10 @@ export function usePlaceSuggestions(query: string) {
           throw new Error("Failed to fetch place suggestions");
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        const data: PlacesResponse = await response.json();
+        const data = (await response.json()) as {
+          status: string;
+          payload: SuggestedPlace[];
+        };
 
         if (isMounted) {
           setSuggestions(data.payload);

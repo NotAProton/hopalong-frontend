@@ -7,7 +7,7 @@ import TextField from "../components/TextField";
 import Button from "../components/Button";
 import Divider from "../components/Divider";
 import OTPInput from "../components/OTPInput";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   validateEmail,
   validateName,
@@ -38,6 +38,7 @@ const SignUp = () => {
     phoneNumber?: string;
     otp?: string;
   }
+  const navigate = useNavigate();
 
   const [errors, setErrors] = useState<Errors>({});
   const [isStep1Valid, setIsStep1Valid] = useState(false);
@@ -493,7 +494,9 @@ const SignUp = () => {
 
               <div className="pt-4">
                 <Button
-                  onClick={() => (window.location.href = "/login")}
+                  onClick={() => {
+                    void navigate("/login");
+                  }}
                   fullWidth
                   icon="mdi:login"
                   delay={0.3}
